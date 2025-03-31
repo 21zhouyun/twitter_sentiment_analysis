@@ -1,0 +1,5 @@
+/.DS_Store
+/.venv
+train.sh
+stfp.json
+archive/*
