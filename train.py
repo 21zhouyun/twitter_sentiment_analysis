@@ -218,13 +218,12 @@ def main(args):
             "val_f1": val_f1
         })
         
-        # Save the best model based on validation accuracy
-        if val_f1 > best_f1:
-            best_f1 = val_f1
-            os.makedirs(args.output_dir, exist_ok=True)
-            model.save_pretrained(args.output_dir)
-            tokenizer.save_pretrained(args.output_dir)
-            print(f"Model saved to {args.output_dir}")
+    
+    # save at the end of training
+    os.makedirs(args.output_dir, exist_ok=True)
+    model.save_pretrained(args.output_dir)
+    tokenizer.save_pretrained(args.output_dir)
+    print(f"Model saved to {args.output_dir}")
     
     # Evaluate on test dataset after training
     print("Evaluating on test set...")
