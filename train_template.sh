@@ -15,4 +15,14 @@ which python
 python --version
 nvidia-smi
 
-python train.py 
+# python train_bert_tweet.py \
+#     --epochs 4 \
+#     --model_name "vinai/bertweet-base"
+
+python train.py \
+    --epochs 10 \
+    --data_path "./archive/train_with_features.csv" \
+    --test_data_path "./archive/test_with_features.csv" \
+    --gpt_feature \
+    --model_name "google-bert/bert-large-cased" \
+    --max_length 512

@@ -50,7 +50,7 @@ class SentimentDataset(Dataset):
 # ---------------------------
 # Data Loading and Preprocessing
 # ---------------------------
-def load_data(file_path, tokenizer, max_length, test_size=0.2):
+def load_data(file_path, tokenizer, max_length, test_size=0.2, gpt_feature=False):
     """
     Load the CSV file and split it into training and validation sets.
     The CSV is assumed to have 6 columns:
@@ -71,6 +71,8 @@ def load_data(file_path, tokenizer, max_length, test_size=0.2):
     df['sentiment'] = df['sentiment'].map(label_map)
     
     texts = df['text'].tolist()
+    if gpt_feature:
+        texts = (df['text'] + " " + df['additional_context']).tolist()
     labels = df['sentiment'].tolist()
     
     # Split into training and validation sets (with stratification)
@@ -82,7 +84,7 @@ def load_data(file_path, tokenizer, max_length, test_size=0.2):
     val_dataset = SentimentDataset(val_texts, val_labels, tokenizer, max_length)
     return train_dataset, val_dataset
 
-def load_test_data(file_path, tokenizer, max_length):
+def load_test_data(file_path, tokenizer, max_length, gpt_feature=False):
     """
     Load the CSV file for testing.
     The CSV is assumed to have columns 'sentiment' and 'text'.
@@ -95,6 +97,9 @@ def load_test_data(file_path, tokenizer, max_length):
     df['sentiment'] = df['sentiment'].map(label_map)
 
     texts = df['text'].tolist()
+    if gpt_feature:
+        texts = (df['text'] + " " + df['additional_context']).tolist()
+
     labels = df['sentiment'].tolist()
     test_dataset = SentimentDataset(texts, labels, tokenizer, max_length)
     return test_dataset
@@ -188,7 +193,7 @@ def main(args):
     wandb.watch(model, log="all")
     
     # Load and preprocess the data
-    train_dataset, val_dataset = load_data(args.data_path, tokenizer, args.max_length, test_size=args.test_size)
+    train_dataset, val_dataset = load_data(args.data_path, tokenizer, args.max_length, test_size=args.test_size, gpt_feature=args.gpt_feature)
     
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False)
@@ -227,7 +232,7 @@ def main(args):
     
     # Evaluate on test dataset after training
     print("Evaluating on test set...")
-    test_dataset = load_test_data(args.test_data_path, tokenizer, args.max_length)
+    test_dataset = load_test_data(args.test_data_path, tokenizer, args.max_length, gpt_feature=args.gpt_feature)
     test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
     test_acc, test_loss, test_f1 = eval_model(model, test_loader, device)
     print(f"Test loss: {test_loss:.4f} | Test accuracy: {test_acc:.4f} | Test F1: {test_f1:.4f}")
@@ -265,6 +270,8 @@ if __name__ == '__main__':
                         help='Directory to save the fine-tuned model')
     parser.add_argument('--wandb_project', type=str, default='twitter_sentiment_analysis', 
                         help='Weights & Biases project name')
+    # bool
+    parser.add_argument('--gpt_feature', action='store_true')
     
     args = parser.parse_args()
     main(args)
